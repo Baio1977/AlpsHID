@@ -56,7 +56,7 @@
 	<key>OSBundleLibraries</key>
 	<dict>
 		<key>com.alexandred.VoodooI2C</key>
-		<string>2.5.2</string>
+		<string>2.9.1</string>
 		<key>com.apple.iokit.IOHIDFamily</key>
 		<string>2.0</string>
 		<key>com.apple.kpi.iokit</key>
