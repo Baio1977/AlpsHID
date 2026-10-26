@@ -31,7 +31,7 @@ jobs:
           
       - name: CI Bootstrap
         run: |
-          src=$(/usr/bin/curl -Lfs https://githubusercontent.com) && eval "$src" || exit 1
+          src=$(/usr/bin/curl -Lfs https://raw.githubusercontent.com/acidanthera/ocbuild/master/ci-bootstrap.sh) && eval "$src" || exit 1
           # Reset DEVELOPER_DIR to use the runner's default Xcode, overriding the non-existent version set by the bootstrap script
           unset DEVELOPER_DIR
           echo "DEVELOPER_DIR=" >> "$GITHUB_ENV"
