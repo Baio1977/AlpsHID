@@ -75,10 +75,12 @@ jobs:
           path: Products/*.zip
           
       - name: Upload to Release
-        if: github.event_name == 'release'
         uses: svenstaro/upload-release-action@2.11.5
+        if: github.event_name != 'pull_request'
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: Products/*.zip
-          tag: ${{ github.ref }}
-          file_glob: true
+         repo_token: ${{ secrets.GITHUB_TOKEN }}
+         file: Products/*.zip
+         tag: ${{ github.ref }}
+         release_name: Polaris22Fixup.kext
+         body: ${{ github.event_name != 'release' && github.event.head_commit.message || '' }}
+         file_glob: true
