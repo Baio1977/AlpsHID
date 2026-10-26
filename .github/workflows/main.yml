@@ -81,6 +81,6 @@ jobs:
          repo_token: ${{ secrets.GITHUB_TOKEN }}
          file: Products/*.zip
          tag: ${{ github.ref }}
-         release_name: Polaris22Fixup.kext
+         release_name: AlpsHID.kext
          body: ${{ github.event_name != 'release' && github.event.head_commit.message || '' }}
          file_glob: true
