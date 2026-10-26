@@ -8,7 +8,7 @@ on:
     types: [published]
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   PROJECT_TYPE: KEXT
@@ -16,63 +16,67 @@ env:
 jobs:
   build:
     name: Build
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     env:
       JOB_TYPE: BUILD
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
-          submodules: true # INDISPENSABILE per caricare il sottomodulo VoodooInput del progetto
+          submodules: true
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           repository: acidanthera/MacKernelSDK
           path: MacKernelSDK
           
       - name: CI Bootstrap
         run: |
-          src=$(/usr/bin/curl -Lfs https://raw.githubusercontent.com/acidanthera/ocbuild/master/ci-bootstrap.sh) && eval "$src" || exit 1
+          src=$(/usr/bin/curl -Lfs https://githubusercontent.com) && eval "$src" || exit 1
+          # Reset DEVELOPER_DIR to use the runner's default Xcode, overriding the non-existent version set by the bootstrap script
+          unset DEVELOPER_DIR
+          echo "DEVELOPER_DIR=" >> "$GITHUB_ENV"
 
-      - run: xcodebuild -jobs 1 -configuration Debug CODE_SIGNING_ALLOWED=NO SYMROOT="$(pwd)/build"
-      - run: xcodebuild -jobs 1 -configuration Release CODE_SIGNING_ALLOWED=NO SYMROOT="$(pwd)/build"
+      - name: Build Debug Configuration
+        run: xcodebuild -jobs 1 -configuration Debug CODE_SIGNING_ALLOWED=NO SYMROOT="$(pwd)/build"
+        
+      - name: Build Release Configuration
+        run: xcodebuild -jobs 1 -configuration Release CODE_SIGNING_ALLOWED=NO SYMROOT="$(pwd)/build"
 
       - name: Zip Kexts for Delivery
         run: |
           mkdir -p Products
           
-          # Trova la kext di Debug ovunque si trovi dentro build/
+          # Process Debug Kext
           DEBUG_KEXT_PATH=$(find build -type d -name "AlpsHID.kext" | grep -i "debug" | head -n 1)
           if [ -n "$DEBUG_KEXT_PATH" ]; then
-            echo "Kext Debug trovata in: $DEBUG_KEXT_PATH"
-            # Ottiene la cartella che la contiene (es. .../Debug) usando un percorso assoluto
+            echo "Debug kext found at: $DEBUG_KEXT_PATH"
             DEBUG_DIR=$(dirname "$DEBUG_KEXT_PATH")
-            # Entra nella cartella, zippa la kext e salva il file zip nella cartella Products principale
-            cd "$DEBUG_DIR" && zip -r "$(pwd)/../../../../Products/AlpsHID-Debug.zip" AlpsHID.kext || zip -r "$GITHUB_WORKSPACE/Products/AlpsHID-Debug.zip" AlpsHID.kext
-            cd "$GITHUB_WORKSPACE"
+            (cd "$DEBUG_DIR" && zip -r "$GITHUB_WORKSPACE/Products/AlpsHID-Debug.zip" AlpsHID.kext)
           else
-            echo "ERRORE: Impossibile trovare la kext di Debug nella cartella build!"
+            echo "ERROR: Unable to find Debug kext in build directory!"
+            exit 1
           fi
           
-          # Trova la kext di Release ovunque si trovi dentro build/
+          # Process Release Kext
           RELEASE_KEXT_PATH=$(find build -type d -name "AlpsHID.kext" | grep -i "release" | head -n 1)
           if [ -n "$RELEASE_KEXT_PATH" ]; then
-            echo "Kext Release trovata in: $RELEASE_KEXT_PATH"
+            echo "Release kext found at: $RELEASE_KEXT_PATH"
             RELEASE_DIR=$(dirname "$RELEASE_KEXT_PATH")
-            cd "$RELEASE_DIR" && zip -r "$(pwd)/../../../../Products/AlpsHID-Release.zip" AlpsHID.kext || zip -r "$GITHUB_WORKSPACE/Products/AlpsHID-Release.zip" AlpsHID.kext
-            cd "$GITHUB_WORKSPACE"
+            (cd "$RELEASE_DIR" && zip -r "$GITHUB_WORKSPACE/Products/AlpsHID-Release.zip" AlpsHID.kext)
           else
-            echo "ERRORE: Impossibile trovare la kext di Release nella cartella build!"
+            echo "ERROR: Unable to find Release kext in build directory!"
+            exit 1
           fi
 
       - name: Upload to Artifacts
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: Artifacts
           path: Products/*.zip
           
       - name: Upload to Release
         if: github.event_name == 'release'
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@2.11.5
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: Products/*.zip
