@@ -8,7 +8,7 @@ on:
     types: [published]
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   PROJECT_TYPE: KEXT
