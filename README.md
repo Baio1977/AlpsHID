@@ -8,7 +8,7 @@ Trackpoint(StickPointer) is supported aswell, including the buttons.
 Should work when injected via Clover or OC, but you do need VoodooI2C / VoodooI2CHID.
 Use the supplied VoodooI2CHID as it contains a fix not yet implemented in the main version.
 
-# Importat
+# Important
 
 This kext was created using version 1.1.2 of VoodooInput.kext; if you wish to use this kext, ensure that you replace the VoodooInput.kext in your EFI with version 1.1.2.
 This project requires a structural overhaul to align with the latest versions of VoodooInput.
